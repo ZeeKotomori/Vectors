@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Implementasi Resultan Vektor — Dinamis (Colour bg #0f1720)</title>
+    <style>
+        :root {
+            --bg: #0f1720;
+            /* sesuai permintaan */
+            --panel: #0b1220;
+            --muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-2: #fb7185;
+            --text: #e6eef8;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            padding: 18px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 18px;
+            background: #2563eb;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn:hover {
+            background: #1e40af;
+        }
+
+        .wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 16px;
+        }
+
+        .panel {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 14px;
+            border-radius: 10px;
+        }
+
+        h1 {
+            font-size: 15px;
+            margin: 0 0 8px 0
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 6px
+        }
+
+        .row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            background: transparent;
+            color: var(--text)
+        }
+
+        button {
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 0;
+            background: var(--accent);
+            color: #022;
+            cursor: pointer;
+            font-weight: 600
+        }
+
+        button.danger {
+            background: var(--accent-2);
+            color: white
+        }
+
+        table {
+            width: 100%;
+            font-size: 13px;
+            border-collapse: collapse
+        }
+
+        th,
+        td {
+            padding: 6px 4px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+            text-align: left
+        }
+
+        th {
+            color: var(--muted);
+            font-weight: 600;
+            font-size: 12px
+        }
+
+        .canvasWrap {
+            display: flex;
+            flex-direction: column;
+            gap: 8px
+        }
+
+        #canvas {
+            width: 100%;
+            height: 640px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.01), rgba(255, 255, 255, 0.01))
+        }
+
+        .stats {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 8px;
+            border-radius: 8px;
+            min-width: 140px
+        }
+
+        .muted {
+            color: var(--muted);
+            font-size: 13px
+        }
+
+        .legend {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            color: var(--muted);
+            font-size: 13px
+        }
+
+        .dot {
+            width: 14px;
+            height: 8px;
+            border-radius: 4px;
+            display: inline-block
+        }
+
+        @media(max-width:980px) {
+            .wrap {
+                grid-template-columns: 1fr;
+            }
+
+            .panel {
+                padding: 12px
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="panel">
+            <h1>Kontrol — Tambah Vektor (dari (x1,y1) ke (x2,y2))</h1>
+            <p class="muted">Masukkan titik awal dan titik akhir tiap vektor. Canvas akan otomatis menyesuaikan skala
+                agar semua vektor terlihat.</p>
+
+            <div style="margin-top:10px">
+                <div class="row">
+                    <div style="flex:1">
+                        <label>x₁ (titik awal)</label>
+                        <input id="x1" type="number" step="any" value="0">
+                    </div>
+                    <div style="flex:1">
+                        <label>y₁ (titik awal)</label>
+                        <input id="y1" type="number" step="any" value="0">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div style="flex:1">
+                        <label>x₂ (titik akhir)</label>
+                        <input id="x2" type="number" step="any" value="10">
+                    </div>
+                    <div style="flex:1">
+                        <label>y₂ (titik akhir)</label>
+                        <input id="y2" type="number" step="any" value="20">
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+                    <button id="addBtn">Tambah Vektor</button>
+                    <button id="sampleBtn" class="">Tambah Contoh</button>
+                    <button id="clearBtn" class="danger">Hapus Semua</button>
+                </div>
+
+                <div style="margin-top:12px">
+                    <h3 style="margin:6px 0 8px 0;font-size:14px">Daftar Vektor</h3>
+                    <div
+                        style="max-height:220px;overflow:auto;border-radius:8px;padding:6px;background:rgba(255,255,255,0.01)">
+                        <table id="vecTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>From</th>
+                                    <th>To</th>
+                                    <th>Vx</th>
+                                    <th>Vy</th>
+                                    <th>V</th>
+                                    <th>θ</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top:12px" class="muted">
+                <strong>Catatan:</strong> Resultan dihitung sebagai jumlah semua komponen (Vx, Vy). Resultan
+                divisualisasikan dari origin (0,0).
+            </div>
+        </div>
+
+        <div class="panel canvasWrap">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+                <div>
+                    <h1 style="font-size:14px;margin:0">Visualisasi</h1>
+                    <div class="muted" style="margin-top:4px">Grid & sumbu otomatis, titik dan label ditampilkan.</div>
+                </div>
+                <div class="legend">
+                    <span class="dot" style="background:var(--accent)"></span> Vektor
+                    <span class="dot" style="background:var(--accent-2)"></span> Resultan
+                </div>
+            </div>
+
+            <canvas id="canvas"></canvas>
+
+            <div
+                style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-top:8px;flex-wrap:wrap">
+                <div class="stats">
+                    <div class="stat"><strong id="rx">Rx = 0</strong>
+                        <div class="muted">Jumlah komponen X</div>
+                    </div>
+                    <div class="stat"><strong id="ry">Ry = 0</strong>
+                        <div class="muted">Jumlah komponen Y</div>
+                    </div>
+                    <div class="stat"><strong id="rmag">R = 0</strong>
+                        <div class="muted">Magnitudo resultan</div>
+                    </div>
+                    <div class="stat"><strong id="rtheta">θ = 0°</strong>
+                        <div class="muted">Arah resultan</div>
+                    </div>
+                </div>
+
+                <div style="min-width:220px">
+                    <div style="background:rgba(255,255,255,0.01);padding:8px;border-radius:8px">
+                        <strong>Petunjuk</strong>
+                        <div class="muted" style="margin-top:6px;font-size:13px">
+                            Masukkan (x1,y1) → (x2,y2). Vektor digambar dari titik awal ke titik akhir. Resultan selalu
+                            dari origin (0,0).
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <a href="index.html" class="btn">Kembali ke Panduan</a>
+        </div>
+    </div>
+
+    <script>
+        /* Single-file app:
+           - Dynamic scale that fits all points + origin.
+           - Draw grid with numeric labels (rounded).
+           - Draw each vector (from x1,y1 to x2,y2) and mark endpoints with labels.
+           - Compute Vx = x2-x1, Vy = y2-y1. Resultant = sum(Vx), sum(Vy).
+        */
+
+        (() => {
+            // DOM
+            const x1In = document.getElementById('x1');
+            const y1In = document.getElementById('y1');
+            const x2In = document.getElementById('x2');
+            const y2In = document.getElementById('y2');
+            const addBtn = document.getElementById('addBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const sampleBtn = document.getElementById('sampleBtn');
+            const vecTableBody = document.querySelector('#vecTable tbody');
+            const rxEl = document.getElementById('rx');
+            const ryEl = document.getElementById('ry');
+            const rmagEl = document.getElementById('rmag');
+            const rthetaEl = document.getElementById('rtheta');
+
+            // Canvas + DPR
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+
+            function sizeCanvas() {
+                canvas.style.width = '100%';
+                canvas.style.height = '640px';
+                const dpr = window.devicePixelRatio || 1;
+                const rect = canvas.getBoundingClientRect();
+                canvas.width = Math.floor(rect.width * dpr);
+                canvas.height = Math.floor(rect.height * dpr);
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            }
+            sizeCanvas();
+            window.addEventListener('resize', () => { sizeCanvas(); drawAll(); });
+
+            // Data
+            let vectors = []; // each: {x1,y1,x2,y2, vx,vy, V, thetaDeg, label, color}
+
+            // Helpers
+            const DEG = Math.PI / 180;
+            function round(v, n = 3) { return Math.round(v * Math.pow(10, n)) / Math.pow(10, n); }
+            function mag(x, y) { return Math.sqrt(x * x + y * y); }
+            function angleDeg(x, y) { return Math.atan2(y, x) / DEG; }
+
+            function computeComponents(x1, y1, x2, y2) {
+                const vx = x2 - x1;
+                const vy = y2 - y1;
+                const V = Math.sqrt(vx * vx + vy * vy);
+                const theta = Math.atan2(vy, vx) / DEG; // degrees
+                return { vx, vy, V, theta };
+            }
+
+            function updateTable() {
+                vecTableBody.innerHTML = '';
+                vectors.forEach((v, i) => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+        <td>${i + 1}</td>
+        <td>(${v.x1}, ${v.y1})</td>
+        <td>(${v.x2}, ${v.y2})</td>
+        <td>${round(v.vx, 4)}</td>
+        <td>${round(v.vy, 4)}</td>
+        <td>${round(v.V, 3)}</td>
+        <td>${round(v.theta, 2)}°</td>
+        <td style="text-align:right"><button data-i="${i}" class="delBtn" style="background:transparent;border:1px solid rgba(255,255,255,0.03);color:var(--text);padding:4px 6px;border-radius:6px;cursor:pointer">Hapus</button></td>
+      `;
+                    vecTableBody.appendChild(tr);
+                });
+                // attach deletions
+                document.querySelectorAll('.delBtn').forEach(b => {
+                    b.addEventListener('click', (e) => {
+                        const i = +e.currentTarget.getAttribute('data-i');
+                        vectors.splice(i, 1);
+                        updateAll();
+                    });
+                });
+            }
+
+            // compute bounding box that must include origin (0,0), all start/end points, and resultant endpoint
+            function computeBounds() {
+                let minX = 0, maxX = 0, minY = 0, maxY = 0;
+                vectors.forEach(v => {
+                    minX = Math.min(minX, v.x1, v.x2);
+                    maxX = Math.max(maxX, v.x1, v.x2);
+                    minY = Math.min(minY, v.y1, v.y2);
+                    maxY = Math.max(maxY, v.y1, v.y2);
+                });
+                // include resultant endpoint too (from origin)
+                const res = computeResultant();
+                minX = Math.min(minX, res.Rx);
+                maxX = Math.max(maxX, res.Rx);
+                minY = Math.min(minY, res.Ry);
+                maxY = Math.max(maxY, res.Ry);
+
+                // if all points same, expand small
+                if (minX === maxX) { minX -= 1; maxX += 1; }
+                if (minY === maxY) { minY -= 1; maxY += 1; }
+                return { minX, maxX, minY, maxY };
+            }
+
+            // compute scale to fit bounds inside canvas with padding
+            function computeScaleAndTransform() {
+                const rectW = canvas.clientWidth;
+                const rectH = canvas.clientHeight;
+                const pad = 60; // px
+                const bounds = computeBounds();
+                const rangeX = bounds.maxX - bounds.minX;
+                const rangeY = bounds.maxY - bounds.minY;
+
+                // pixels per unit (math unit)
+                const scaleX = (rectW - pad * 2) / rangeX;
+                const scaleY = (rectH - pad * 2) / rangeY;
+                let scale = Math.min(scaleX, scaleY);
+
+                // if extremely large scale (range small), cap to make vectors visible
+                if (!isFinite(scale) || scale > 200) scale = 50;
+                if (scale < 6) scale = Math.max(scale, 6); // lower bound to keep grid readable
+
+                // center of bounds in math coordinates
+                const centerX = (bounds.minX + bounds.maxX) / 2;
+                const centerY = (bounds.minY + bounds.maxY) / 2;
+
+                // map math coordinate (centerX, centerY) to canvas pixel center
+                const cx = rectW / 2;
+                const cy = rectH / 2;
+
+                // transform function: math (x,y) -> canvas px
+                function toCanvas(x, y) {
+                    const px = cx + (x - centerX) * scale;
+                    const py = cy - (y - centerY) * scale; // invert y for canvas
+                    return { x: px, y: py };
+                }
+                // inverse (not needed now) could be added
+                return { scale, toCanvas, centerX, centerY, cx, cy };
+            }
+
+            // compute resultant components
+            function computeResultant() {
+                let Rx = 0, Ry = 0;
+                vectors.forEach(v => { Rx += v.vx; Ry += v.vy; });
+                const R = Math.sqrt(Rx * Rx + Ry * Ry);
+                let theta = Math.atan2(Ry, Rx) / DEG;
+                if (isNaN(theta)) theta = 0;
+                // normalize 0..360
+                if (theta < 0) theta += 360;
+                return { Rx, Ry, R, theta };
+            }
+
+            // Grid drawing with numeric labels: choose a nice tick spacing in math units depending on scale
+            function chooseTickUnit(scale) {
+                // scale: pixels per math-unit. We desire tickDistPx ~ 50-120 px.
+                const targetPx = 80;
+                const rawUnit = targetPx / scale; // math units
+                // round rawUnit to 1,2,5 * 10^n
+                const pow = Math.pow(10, Math.floor(Math.log10(rawUnit || 1)));
+                const candidates = [1, 2, 5, 10];
+                let best = pow;
+                let bestDiff = Infinity;
+                for (const c of candidates) {
+                    const u = c * pow;
+                    const diff = Math.abs(u - rawUnit);
+                    if (diff < bestDiff) { bestDiff = diff; best = u; }
+                }
+                return best;
+            }
+
+            // draw axes, grid, ticks, labels
+            function drawGrid(transform) {
+                const { scale, toCanvas, centerX, centerY, cx, cy } = transform;
+                const rectW = canvas.clientWidth;
+                const rectH = canvas.clientHeight;
+
+                // background fill subtle (already background set by CSS) - we keep transparent
+                // grid lines
+                const tickUnit = chooseTickUnit(scale); // in math units
+                ctx.save();
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = 'rgba(200,200,200,0.03)';
+                ctx.fillStyle = 'rgba(230,238,248,0.75)';
+                ctx.font = '12px Inter, sans-serif';
+
+                // determine visible math range
+                // compute canvas corners back to math coords using centerX, centerY and scale
+                const leftMath = centerX - (rectW / 2) / scale;
+                const rightMath = centerX + (rectW / 2) / scale;
+                const bottomMath = centerY - (rectH / 2) / scale;
+                const topMath = centerY + (rectH / 2) / scale;
+
+                // vertical grid lines (x = n * tickUnit)
+                const firstX = Math.floor(leftMath / tickUnit) * tickUnit;
+                for (let x = firstX; x <= rightMath; x += tickUnit) {
+                    const p = toCanvas(x, 0);
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, 0);
+                    ctx.lineTo(p.x, rectH);
+                    ctx.stroke();
+                    // tick label on x-axis (near bottom)
+                    const labelY = cy + 14;
+                    ctx.fillText(String(round(x, 3)), p.x + 4, labelY + 6);
+                }
+
+                // horizontal grid lines (y = n * tickUnit)
+                const firstY = Math.floor(bottomMath / tickUnit) * tickUnit;
+                for (let y = firstY; y <= topMath; y += tickUnit) {
+                    const p = toCanvas(0, y);
+                    ctx.beginPath();
+                    ctx.moveTo(0, p.y);
+                    ctx.lineTo(rectW, p.y);
+                    ctx.stroke();
+                    // label on y-axis (left)
+                    const labelX = cx + 6;
+                    ctx.fillText(String(round(y, 3)), labelX - (cx - (labelX)), p.y - 6);
+                }
+
+                // draw axes (x and y) thicker
+                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = 'rgba(230,238,248,0.12)';
+                // x-axis (y=0)
+                const pLeft = toCanvas(leftMath, 0);
+                const pRight = toCanvas(rightMath, 0);
+                ctx.beginPath(); ctx.moveTo(pLeft.x, pLeft.y); ctx.lineTo(pRight.x, pRight.y); ctx.stroke();
+                // y-axis (x=0)
+                const pTop = toCanvas(0, topMath);
+                const pBottom = toCanvas(0, bottomMath);
+                ctx.beginPath(); ctx.moveTo(pTop.x, pTop.y); ctx.lineTo(pBottom.x, pBottom.y); ctx.stroke();
+
+                ctx.restore();
+            }
+
+            // draw arrow helper
+            function drawArrow(px1, py1, px2, py2, opts = {}) {
+                const color = opts.color || 'rgba(56,189,248,1)';
+                const width = opts.width || 2;
+                const head = opts.head || 12;
+                ctx.save();
+                ctx.strokeStyle = color;
+                ctx.fillStyle = color;
+                ctx.lineWidth = width;
+                ctx.beginPath(); ctx.moveTo(px1, py1); ctx.lineTo(px2, py2); ctx.stroke();
+                const ang = Math.atan2(py2 - py1, px2 - px1);
+                ctx.beginPath();
+                ctx.moveTo(px2, py2);
+                ctx.lineTo(px2 - head * Math.cos(ang - Math.PI / 7), py2 - head * Math.sin(ang - Math.PI / 7));
+                ctx.lineTo(px2 - head * Math.cos(ang + Math.PI / 7), py2 - head * Math.sin(ang + Math.PI / 7));
+                ctx.closePath(); ctx.fill();
+                ctx.restore();
+            }
+
+            // main draw
+            function drawAll() {
+                // clear
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // compute transform
+                const transform = computeScaleAndTransform();
+                drawGrid(transform);
+
+                // draw vectors
+                vectors.forEach((v, idx) => {
+                    const c1 = transform.toCanvas(v.x1, v.y1);
+                    const c2 = transform.toCanvas(v.x2, v.y2);
+                    // line
+                    drawArrow(c1.x, c1.y, c2.x, c2.y, { color: v.color, width: 2, head: 10 });
+                    // draw endpoints as filled circles
+                    ctx.beginPath(); ctx.fillStyle = v.color; ctx.arc(c2.x, c2.y, 4, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.arc(c1.x, c1.y, 3, 0, Math.PI * 2); ctx.fill();
+                    // labels: Vn and coords near tip
+                    ctx.font = '12px Inter, sans-serif';
+                    ctx.fillStyle = 'rgba(230,238,248,0.9)';
+                    const label = `V${idx + 1} (${v.x2},${v.y2})`;
+                    ctx.fillText(label, c2.x + 6, c2.y - 6);
+                });
+
+                // draw resultant from origin (0,0)
+                const res = computeResultant();
+                const originCanvas = transform.toCanvas(0, 0);
+                const resCanvas = transform.toCanvas(res.Rx, res.Ry);
+                if (vectors.length > 0) {
+                    drawArrow(originCanvas.x, originCanvas.y, resCanvas.x, resCanvas.y, { color: 'rgba(251,113,133,1)', width: 4, head: 14 });
+                    // label result
+                    ctx.font = '13px Inter, sans-serif';
+                    ctx.fillStyle = 'rgba(251,113,133,1)';
+                    ctx.fillText(`Resultant R=${round(res.R, 4)} θ=${round(res.theta, 2)}°`, resCanvas.x + 8, resCanvas.y - 8);
+                }
+
+                // draw origin mark and label
+                ctx.beginPath(); ctx.fillStyle = 'rgba(230,238,248,0.95)'; ctx.arc(originCanvas.x, originCanvas.y, 4, 0, Math.PI * 2); ctx.fill();
+                ctx.font = '12px Inter, sans-serif'; ctx.fillStyle = 'rgba(230,238,248,0.85)';
+                ctx.fillText('(0,0)', originCanvas.x + 6, originCanvas.y + 14);
+
+                // update stats
+                rxEl.textContent = `Rx = ${round(res.Rx, 4)}`;
+                ryEl.textContent = `Ry = ${round(res.Ry, 4)}`;
+                rmagEl.textContent = `R = ${round(res.R, 4)}`;
+                rthetaEl.textContent = `θ = ${round(res.theta, 3)}°`;
+            }
+
+            // add vector
+            addBtn.addEventListener('click', () => {
+                const x1 = parseFloat(x1In.value) || 0;
+                const y1 = parseFloat(y1In.value) || 0;
+                const x2 = parseFloat(x2In.value) || 0;
+                const y2 = parseFloat(y2In.value) || 0;
+                const comps = computeComponents(x1, y1, x2, y2);
+                const color = colorForIndex(vectors.length);
+                const v = {
+                    x1, y1, x2, y2,
+                    vx: comps.vx, vy: comps.vy, V: comps.V, theta: round(comps.theta, 3),
+                    color
+                };
+                vectors.push(v);
+                updateAll();
+            });
+
+            // sample vectors
+            sampleBtn.addEventListener('click', () => {
+                // add sample chain: (0,0)->(10,20), (10,20)->(90,20)
+                const s = [
+                    { x1: 0, y1: 0, x2: 10, y2: 20 },
+                    { x1: 10, y1: 20, x2: 90, y2: 20 }
+                ];
+                s.forEach(sv => {
+                    const comps = computeComponents(sv.x1, sv.y1, sv.x2, sv.y2);
+                    vectors.push({
+                        ...sv, vx: comps.vx, vy: comps.vy, V: comps.V, theta: round(comps.theta, 3),
+                        color: colorForIndex(vectors.length)
+                    });
+                });
+                updateAll();
+            });
+
+            // clear
+            clearBtn.addEventListener('click', () => {
+                vectors = [];
+                updateAll();
+            });
+
+            function updateAll() {
+                updateTable();
+                drawAll();
+            }
+
+            // color palette
+            function colorForIndex(i) {
+                const pal = ['hsl(200 85% 60%)', 'hsl(40 85% 60%)', 'hsl(280 85% 60%)', 'hsl(120 65% 55%)', 'hsl(10 85% 60%)', 'hsl(330 85% 60%)'];
+                return pal[i % pal.length];
+            }
+
+            // initial draw
+            updateAll();
+
+        })();
+    </script>
+</body>
+
+</html>
